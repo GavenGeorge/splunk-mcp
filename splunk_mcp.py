@@ -58,6 +58,9 @@ sse = SseServerTransport("/messages/")
 # Mount the /messages path to handle SSE message posting
 app.router.routes.append(Mount("/messages", app=sse.handle_post_message))
 
+streamable_http_app = mcp.streamable_http_app()
+app.mount("/mcp", streamable_http_app)
+
 # Add documentation for the /messages endpoint
 @app.get("/messages", tags=["MCP"], include_in_schema=True)
 def messages_docs():
@@ -902,8 +905,8 @@ if __name__ == "__main__":
     # Get the mode from command line arguments
     mode = sys.argv[1] if len(sys.argv) > 1 else "sse"
     
-    if mode not in ["stdio", "sse"]:
-        logger.error(f"❌ Invalid mode: {mode}. Must be one of: stdio, sse")
+    if mode not in ["stdio", "sse", "streamable_http"]:
+        logger.error(f"❌ Invalid mode: {mode}. Must be one of: stdio, sse, streamable_http")
         sys.exit(1)
     
     # Set logger level to debug if DEBUG environment variable is set
@@ -916,7 +919,10 @@ if __name__ == "__main__":
     
     if mode == "stdio":
         # Run in stdio mode
-        mcp.run(transport=mode)
+        mcp.run(transport="stdio")
+    elif mode == "streamable_http":
+        # Run in streamable HTTP mode 
+        mcp.run(transport="streamable_http")
     else:
         # Run in SSE mode with documentation
         uvicorn.run(app, host="0.0.0.0", port=FASTMCP_PORT) 
